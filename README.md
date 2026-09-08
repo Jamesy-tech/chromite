@@ -1,0 +1,2 @@
+# chromite
+Chromecast Assistant/Helper
