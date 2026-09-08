@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cast to Chromecast</title>
+
+    <script src="https://gstatic.com"></script>
+</head>
+<body>
+
+    <h1>Cast to Chromecast</h1>
+    <p>Click the button below to open the Chromecast prompt:</p>
+
+    <google-cast-launcher></google-cast-launcher>
+
+    <script>
+        window.__onGCastApiAvailable = function(isAvailable) {
+            if (isAvailable) {
+                initializeCastContext();
+            }
+        };
+
+        function initializeCastContext() {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
+            });
+        }
+    </script>
+</body>
+</html>
