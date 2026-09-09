@@ -1,90 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chromecast Web Sender</title>
+    <title>Chromecast Debugger</title>
 </head>
 <body>
 
-    <h1>Chromecast Debugger</h1>
-    
-    <!-- Google Cast native web component button -->
-    <google-cast-launcher id="cast-button"></google-cast-launcher>
-    
-    <button id="manual-cast-btn">Trigger Manual Cast Prompt</button>
+<h1>Chromecast Debugger</h1>
 
-    <script>
-        console.log("[DEBUG] Script execution started.");
+<google-cast-launcher></google-cast-launcher>
+<button id="manual-cast-btn">Trigger Cast Prompt</button>
 
-        // This global callback MUST be defined before loading the cast_sender.js script
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            console.log(`[DEBUG] __onGCastApiAvailable triggered. Availability: ${isAvailable}`);
-            if (isAvailable) {
-                initializeCastApi();
-            } else {
-                console.warn("[WARN] Google Cast API is reported as unavailable by Chrome.");
-            }
-        };
+<script>
+window.__onGCastApiAvailable = function(isAvailable) {
+    console.log("Cast API available:", isAvailable);
 
-        function initializeCastApi() {
-            console.log("[DEBUG] Initializing Cast Context...");
-            try {
-                const context = cast.framework.CastContext.getInstance();
-                
-                context.setOptions({
-                    receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-                });
-                
-                console.log("[DEBUG] Cast Context successfully initialized with Default Media Receiver.");
-                
-                // Track state changes to debug button visibility issues
-                context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
-                    console.log(`[DEBUG] Cast State Changed: ${event.castState}`);
-                });
-                
-                setupManualTrigger(context);
-            } catch (error) {
-                console.error("[ERROR] Failed during cast framework initialization:", error);
-            }
-        }
+    if (!isAvailable) return;
 
-        function setupManualTrigger(context) {
-            const btn = document.getElementById('manual-cast-btn');
-            btn.addEventListener('click', function() {
-                console.log("[INFO] Manual prompt button clicked. Checking states...");
-                
-                const currentState = context.getCastState();
-                console.log(`[DEBUG] Current Cast State: ${currentState}`);
-                
-                if (currentState === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
-                    console.warn("[WARN] No cast devices detected on your local network. Prompt might fail.");
-                }
+    const context = cast.framework.CastContext.getInstance();
 
-                console.log("[DEBUG] Requesting session (triggering native prompt)...");
-                context.requestSession()
-                    .then(function(session) {
-                        console.log("[SUCCESS] Cast session started successfully!", session);
-                    })
-                    .catch(function(error) {
-                        console.error("[WARN] Session request rejection or error:", error);
-                    });
+    context.setOptions({
+        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+    });
+
+    document.getElementById("manual-cast-btn").onclick = function() {
+        console.log("Requesting Cast session...");
+
+        context.requestSession()
+            .then(function(session) {
+                console.log("Cast session started:", session);
+            })
+            .catch(function(error) {
+                console.error("Cast request failed:", error);
             });
-        }
+    };
+};
+</script>
 
-        // Fallback check to see if the script loaded but window callback missed timing
-        window.addEventListener('load', function() {
-            console.log("[DEBUG] Window loaded. Inspecting namespaces...");
-            console.log("[DEBUG] typeof window.cast: " + typeof window.cast);
-            console.log("[DEBUG] typeof window.chrome: " + typeof window.chrome);
-            if (typeof window.chrome !== 'undefined') {
-                console.log("[DEBUG] typeof window.chrome.cast: " + typeof window.chrome.cast);
-            }
-        });
-    </script>
-
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
 </body>
 </html>
