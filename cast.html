@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chromecast Test</title>
+</head>
+<body>
+
+<h1>Chromecast Test</h1>
+
+<google-cast-launcher></google-cast-launcher>
+
+<script>
+window.__onGCastApiAvailable = function(isAvailable) {
+    if (!isAvailable) {
+        console.log("Cast unavailable");
+        return;
+    }
+
+    cast.framework.CastContext.getInstance().setOptions({
+        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+    });
+
+    console.log("Cast initialized");
+};
+</script>
+
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
+</body>
+</html>
