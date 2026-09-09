@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="popup.css">
+        <title>Chromite</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+        <style>
+
+            * {
+                font-family:"Nunito";
+            }
+            body {
+                font-family: "Nunito";
+            }
+
+            .title {
+                font-size:24px;
+                display:block;
+                width:100px;
+            }
+
+            .main {
+                padding:10px;
+                display:inline-block;
+                width:350px;
+            }
+
+            .new {
+                background: dodgerblue;
+                padding:10px;
+                border-radius:50px;
+                color:white;
+                font-family:"Mulish";
+                border:none;
+                padding-left:15px;
+                padding-right:15px;
+                margin-left:auto;
+                display:block;
+                font-size:14px;
+                margin-top:12px;
+                transition:0.2s;
+                cursor:pointer;
+            }
+
+            .new:hover {
+              filter:brightness(112%);  
+            }
+
+            .description {
+                font-size:15px;
+                display:block;
+            }
+
+            .devices {
+                padding:0;
+                padding-top:10px;
+                padding-bottom:11px;
+            }
+            
+            .device {
+                background:white;
+                border-top:solid 1px whitesmoke;
+                border-bottom:solid 1px whitesmoke;
+                font-size:12px;
+                padding:4px;
+                cursor:pointer;
+
+            }
+ 
+            .device:hover {
+                background:whitesmoke;
+            }
+
+            .device:focus {
+                background:dodgerblue;
+                color:white;
+            }
+
+            #ab38, #ab382 {
+                display:block;
+                margin-top:10px;
+            }
+
+            .break {
+                height:12px;
+                display:block;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="main">
+
+                   <span class="title" id="title">Chromite</span>
+
+            <div id="home">
+
+                 <span class="description">Chromecast Assistant/Helper</span>
+
+        <button class="new" id="cast-button">+ Connect New Device</button>
+   
+             </div>
+
+                 <div id="connect">
+
+
+                        <span class="description">Select your device</span>
+
+                        <div class="devices">
+                              <div class="device">Use Access Code</div>
+                            <div class="device">Device 1</div>
+                            <div class="device">Device 2</div>
+                        </div>
+
+        <button class="new" id="next2">Next</button>
+   
+             </div>
+
+              <div id="info1">
+
+
+                        <span class="description">Connect to your Chromecast device</span>
+
+                        <span class="description" id="ab38"> <b>On your screen you will see an icon at the top right of your screen with three dots. Click on that and scroll down to "Cast, save and share", then proceed to cast your device.</b>
+                            <span class="break"></span>Please find your TV/device that you are connecting to and select it.
+                            <span class="break"></span>Once you are done, press <b>Next</b>.</span>
+
+                        
+
+        <button class="new" id="next1">Next</button>
+   
+             </div>
+
+               <div id="info2">
+
+
+                        <span class="description">Connect to your Chromecast device</span>
+
+                        <span class="description" id="ab38"> <b>Next, make sure your Chromecast device is powered on and ready to cast. </b>
+                            <span class="break"></span>On that same cast menu you were on before, locate your device name and select it. Some Chromecasts may support an "Access Code" that is shown on the screen and you may use it if you like.
+                            <span class="break"></span></span>
+
+                        
+
+        <button class="new" id="troubleshooting">Troubleshooting</button>
+   
+             </div>
+
+                <div id="troubleshooting-page">
+
+                        <span class="description">Troubleshooting</span>
+
+                        <span class="description" id="ab382"> <b>Not connecting?</b>
+                           
+                              <ul>
+                          <li>Is your Chromecast device turned on and ready?</li>
+                          <li>Are you connected to the same Internet/WiFi as the Chromecast you are connecting to?</li>
+                                </ul>
+                            <span class="break"></span></span>
+
+        <button class="new" id="done">Close</button>
+   
+             </div>
+
+
+        </div>
+
+          <script src="popup.js"></script>
+
+    </body>
+</html>
