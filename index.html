@@ -3,157 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Pages Chromecast Sender</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f5f5f7;
-        }
-        #cast-container {
-            text-align: center;
-            padding: 24px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .cast-btn {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 4px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: background-color 0.2s;
-        }
-        .cast-btn:hover {
-            background-color: #1557b0;
-        }
-        .cast-btn:disabled {
-            background-color: #c3c3c3;
-            cursor: not-allowed;
-        }
-        #debug-log {
-            margin-top: 20px;
-            width: 320px;
-            max-height: 150px;
-            overflow-y: auto;
-            background: #202124;
-            color: #34a853;
-            font-family: monospace;
-            font-size: 11px;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: left;
-            white-space: pre-wrap;
-        }
-    </style>
+    <title>Chromecast Sender Debugger</title>
 </head>
 <body>
 
-<div id="cast-container">
-    <h2>Chromecast Web Sender</h2>
-    <button id="custom-cast-btn" class="cast-btn" disabled>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.92-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-        </svg>
-        <span>Checking Cast Availability...</span>
-    </button>
-    <div id="debug-log">Initial state loaded.</div>
-</div>
+    <h1>Chromecast Controller</h1>
+    
+    <div>
+        <google-cast-launcher id="castbutton"></google-cast-launcher>
+        <button id="manualCast">Trigger Programmatic Prompt</button>
+    </div>
 
-<script>
-    const logger = document.getElementById('debug-log');
-    const castBtn = document.getElementById('custom-cast-btn');
+    <h2>Console Logs</h2>
+    <div id="debugLog" style="width:100%; height:300px; background:#111; color:#0f0; font-family:monospace; padding:10px; overflow-y:auto; border:1px solid #333; box-sizing:border-box;"></div>
 
-    function log(msg) {
-        console.log("[Cast Debug]", msg);
-        logger.textContent += "\n> " + msg;
-        logger.scrollTop = logger.scrollHeight;
-    }
-
-    window['__onGCastApiAvailable'] = function(isAvailable) {
-        log("__onGCastApiAvailable triggered. Availability: " + isAvailable);
-        if (isAvailable) {
-            initializeCastContext();
-        } else {
-            log("Cast API not available. Ensure you are using Google Chrome or a Chromium browser.");
-        }
-    };
-
-    function initializeCastContext() {
-        try {
-            const context = cast.framework.CastContext.getInstance();
-            context.setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
-            log("CastContext successfully configured with default media receiver ID.");
-
-            context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
-                log("Cast State Changed: " + event.castState);
-                updateButtonState(event.castState);
-            });
-
-            updateButtonState(context.getCastState());
-
-        } catch (error) {
-            log("Initialization Error: " + error.message);
-        }
-    }
-
-    function updateButtonState(state) {
-        const btnText = castBtn.querySelector('span');
+    <script>
+        const logBox = document.getElementById('debugLog');
         
-        if (state === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
-            log("No Chromecast devices discovered on the local network.");
-            castBtn.disabled = true;
-            btnText.textContent = "No Devices Found";
-        } else if (state === cast.framework.CastState.NOT_CONNECTED) {
-            log("Chromecast devices are ready to connect.");
-            castBtn.disabled = false;
-            btnText.textContent = "Cast to Device";
-        } else if (state === cast.framework.CastState.CONNECTING) {
-            log("Establishing connection with receiver device...");
-            castBtn.disabled = true;
-            btnText.textContent = "Connecting...";
-        } else if (state === cast.framework.CastState.CONNECTED) {
-            log("Successfully connected to Cast session.");
-            castBtn.disabled = false;
-            btnText.textContent = "Disconnect Cast";
+        function log(msg, type = 'INFO') {
+            const time = new Date().toLocaleTimeString();
+            logBox.innerHTML += `[${time}] [${type}] ${msg}<br>`;
+            logBox.scrollTop = logBox.scrollHeight;
+            console.log(`[${type}] ${msg}`);
         }
-    }
 
-    castBtn.addEventListener('click', function() {
-        log("Interaction detected. Prompting user selection window.");
-        const context = cast.framework.CastContext.getInstance();
-        
-        if (context.getCastState() === cast.framework.CastState.CONNECTED) {
-            log("Requesting session disconnection.");
-            context.getCurrentSession().endSession(true);
-        } else {
-            context.requestSession()
-                .then(function() {
-                    log("User selected a device. Session initialized.");
-                })
-                .catch(function(err) {
-                    log("Prompt closed or rejected: " + err);
+        window.onerror = function(message, source, lineno, colno, error) {
+            log(`${message} at ${source}:${lineno}`, 'ERROR');
+            return false;
+        };
+
+        window['__onGCastApiAvailable'] = function(isAvailable) {
+            log(`__onGCastApiAvailable triggered. Availability: ${isAvailable}`);
+            if (isAvailable) {
+                initializeCastApi();
+            } else {
+                log('Google Cast API fallback triggered: Not Available', 'WARN');
+            }
+        };
+
+        function initializeCastApi() {
+            log('Initializing Cast Context...');
+            try {
+                const context = cast.framework.CastContext.getInstance();
+                context.setOptions({
+                    receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
                 });
+                
+                log('Cast Context successfully initialized.');
+                setupCastEventListeners(context);
+            } catch (err) {
+                log(`Initialization failed: ${err.message}`, 'ERROR');
+            }
         }
-    });
-</script>
 
-<script src="https://gstatic.com"></script>
+        function setupCastEventListeners(context) {
+            context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
+                log(`Cast State Changed: ${event.castState}`);
+            });
+
+            context.addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, function(event) {
+                log(`Session State Changed: ${event.sessionState}`);
+            });
+        }
+
+        document.getElementById('manualCast').addEventListener('click', async function() {
+            log('Manual prompt button clicked. Checking states...');
+            try {
+                const context = cast.framework.CastContext.getInstance();
+                log(`Current state status: ${context.getCastState()}`);
+                
+                log('Requesting casting session trigger...');
+                const session = await context.requestSession();
+                log('Session established successfully!');
+            } catch (err) {
+                log(`Session request rejection or error: ${err}`, 'WARN');
+            }
+        });
+    </script>
+
+    <script src="https://gstatic.com"></script>
 
 </body>
 </html>
