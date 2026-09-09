@@ -1,1 +1,0 @@
-console.log('Chromite has started [content.js]');
