@@ -2,30 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cast to Chromecast</title>
-
-    <script src="https://gstatic.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages Chromecast Sender</title>
+    
+    <!-- 1. Style the custom Google Cast element so it is visible -->
+    <style>
+        #cast-button {
+            --connected-color: #4285f4;
+            --disconnected-color: #757575;
+            width: 40px;
+            height: 40px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        button.manual-trigger {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Cast to Chromecast</h1>
-    <p>Click the button below to open the Chromecast prompt:</p>
+    <h1>Chromecast Integration Test</h1>
 
-    <google-cast-launcher>Click here</google-cast-launcher>
+    <!-- Option A: The official Google Cast web component button -->
+    <div>
+        <p>Official Cast Component:</p>
+        <button id="cast-button" is="google-cast-button"></button>
+    </div>
+
+    <!-- Option B: A standard HTML button to trigger the prompt via code -->
+    <div style="margin-top: 20px;">
+        <p>Programmatic Trigger:</p>
+        <button class="manual-trigger" id="custom-trigger-btn">Open Cast Prompt</button>
+    </div>
 
     <script>
+        // 2. This exact global function name MUST be declared before the SDK script loads
         window.__onGCastApiAvailable = function(isAvailable) {
             if (isAvailable) {
-                initializeCastContext();
+                initializeCastApi();
+            } else {
+                console.log("Chromecast API not available on this browser session.");
             }
         };
 
-        function initializeCastContext() {
-            cast.framework.CastContext.getInstance().setOptions({
+        // 3. Initialize the Cast Context
+        function initializeCastApi() {
+            const castContext = cast.framework.CastContext.getInstance();
+            
+            castContext.setOptions({
+                // Use default media receiver or replace with your custom Registered App ID
                 receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+
+            console.log("Cast SDK Initialized Successfully.");
+            setupManualTrigger();
+        }
+
+        // 4. Bind programmatic requestSession to your custom button
+        function setupManualTrigger() {
+            const triggerBtn = document.getElementById('custom-trigger-btn');
+            
+            triggerBtn.addEventListener('click', async () => {
+                try {
+                    const castContext = cast.framework.CastContext.getInstance();
+                    // This command forces Chrome to open the local device casting menu
+                    await castContext.requestSession();
+                    console.log("Session started successfully!");
+                } catch (error) {
+                    console.error("Cast prompt closed or failed:", error);
+                }
             });
         }
     </script>
+
+    <!-- 5. Load the official Google Cast Framework SDK at the end of the body -->
+    <script src="https://gstatic.com"></script>
+
 </body>
 </html>
