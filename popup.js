@@ -1,5 +1,8 @@
 // popup.js
 
+var title = "Chromite";
+var version = chrome.runtime.getManifest().version;
+
 function home() {
     console.log("Page: home")
     document.getElementById('home').style.display = 'block';
