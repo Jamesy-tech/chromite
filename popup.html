@@ -1,195 +1,120 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link rel="stylesheet" href="popup.css">
-        <title>Chromite</title>
+// popup.js
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+var title = "Chromite";
+var version = chrome.runtime.getManifest().version;
 
-        <style>
+function home() {
+    console.log("Page: home")
+    document.getElementById('home').style.display = 'block';
+    document.getElementById('connect').style.display = 'none';
+    document.getElementById('info1').style.display = 'none';
+    document.getElementById('info2').style.display = 'none';
+    document.getElementById('troubleshooting-page').style.display = 'none';
+}
 
-            * {
-                font-family:"Nunito";
-            }
-            body {
-                font-family: "Nunito";
-            }
+function connect() {
+    console.log("Page: connect")
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('connect').style.display = 'block';
+     document.getElementById('info1').style.display = 'none';
+     document.getElementById('info2').style.display = 'none';
+     document.getElementById('troubleshooting-page').style.display = 'none';
+}
 
-            .title {
-                font-size:24px;
-                display:block;
-                width:250px;
-            }
+function info1() {
+    console.log("Page: info1")
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('connect').style.display = 'none';
+     document.getElementById('info1').style.display = 'block';
+     document.getElementById('info2').style.display = 'none';
+      document.getElementById('troubleshooting-page').style.display = 'none';
+}
 
-            .main {
-                padding:10px;
-                display:inline-block;
-                width:350px;
-            }
+function info2() {
+    console.log("Page: info1")
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('connect').style.display = 'none';
+     document.getElementById('info1').style.display = 'none';
+     document.getElementById('info2').style.display = 'block';
+      document.getElementById('troubleshooting-page').style.display = 'none';
+}
 
-            .new {
-                background: dodgerblue;
-                padding:10px;
-                border-radius:50px;
-                color:white;
-                font-family:"Mulish";
-                border:none;
-                padding-left:15px;
-                padding-right:15px;
-                margin-left:auto;
-                display:block;
-                font-size:14px;
-                margin-top:12px;
-                transition:0.2s;
-                cursor:pointer;
-            }
+function troubleshooting() {
+  console.log("Page: troubleshooting")
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('connect').style.display = 'none';
+     document.getElementById('info1').style.display = 'none';
+     document.getElementById('info2').style.display = 'none';
+     document.getElementById('troubleshooting-page').style.display = 'block';
+}
 
-            .new:hover {
-              filter:brightness(112%);  
-            }
+function askAI() {
+      var input = document.getElementById('ask').value
+      window.open("https://perplexity.ai/search?q=" + "My%20Chromecast%20isn't%20working!%20Here%20is%20the%20problem:%20" + input)
+}
 
-            .description {
-                font-size:15px;
-                display:block;
-            }
+async function triggerCasting() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (!tab?.id) return;
 
-            .devices {
-                padding:0;
-                padding-top:10px;
-                padding-bottom:11px;
-            }
-            
-            .device {
-                background:white;
-                border-top:solid 1px whitesmoke;
-                border-bottom:solid 1px whitesmoke;
-                font-size:12px;
-                padding:4px;
-                cursor:pointer;
+    if (tab.url?.startsWith("chrome://")) {
+      console.error("Cannot cast from internal Chrome pages.");
+      return;
+    }
 
-            }
+    await chrome.tabs.sendMessage(tab.id, { action: "START_CASTING" });
+  } catch (error) {
+    console.error("Failed to communicate with content script. Is it injected?", error);
+  }
+}
+
+document.getElementById('cast-button').addEventListener('click', () => {
+  console.log("Starting guided connection...")
+  info1();
+});
+
+document.getElementById('connectnew').addEventListener('click', () => {
+  console.log("Starting guided connection...")
+  info1();
+});
+
+
+document.getElementById('next1').addEventListener('click', () => {
  
-            .device:hover {
-                background:whitesmoke;
-            }
+    console.log("Prompting connection...")
 
-            .device:focus {
-                background:dodgerblue;
-                color:white;
-            }
+    info2();
 
-            #ab38, #ab382 {
-                display:block;
-                margin-top:10px;
-            }
+});
 
-            .break {
-                height:12px;
-                display:block;
-            }
+document.getElementById('troubleshooting').addEventListener('click', () => {
+ 
+     console.log('Troubleshooting connection...')
 
-            .input {
-                border:none;
-                outline:none;
-                background:none;
-                width:100%;
-            }
+    troubleshooting();
 
-        </style>
-    </head>
-    <body>
-        <div class="main">
+});
 
-                   <span class="title" id="title">Chromite [GUI v1.7]</span>
+document.getElementById('done').addEventListener('click', () => {
+ 
+     console.log('Closing window...')
 
-            <div id="home">
+    window.close();
 
-                 <span class="description">Chromecast Assistant/Helper</span>
+});
 
-                   <div class="devices">
+document.getElementById("ask").focus();
 
-                              <div class="device" id="connectnew">Connect New Device</div>
-                            <div class="device"><input class="input" id="ask" placeholder="What's the problem?"></div>
+  const input = document.getElementById("ask");
 
-                        </div>
+  input.addEventListener("keydown", function(event) {
 
-        <button class="new" id="cast-button">+ Connect New Device</button>
-   
-             </div>
+    if (event.key === "Enter") {
+      event.preventDefault();
+      askAI(); 
+    }
+  });
 
-                 <div id="connect">
-
-
-                        <span class="description">Select your device</span>
-
-                        <div class="devices">
-                              <div class="device">Use Access Code</div>
-                            <div class="device">Device 1</div>
-                            <div class="device">Device 2</div>
-                        </div>
-
-        <button class="new" id="next2">Next</button>
-   
-             </div>
-
-              <div id="info1">
-
-
-                        <span class="description">Connect to your Chromecast device</span>
-
-                        <span class="description" id="ab38"> <b>On your screen you will see an icon at the top right of your screen with three dots. Click on that and scroll down to "Cast, save and share", then proceed to cast your device.</b>
-                            <span class="break"></span>Please find your TV/device that you are connecting to and select it.
-                            <span class="break"></span>Once you are done, press <b>Next</b>.</span>
-
-                        
-
-        <button class="new" id="next1">Next</button>
-   
-             </div>
-
-               <div id="info2">
-
-
-                        <span class="description">Connect to your Chromecast device</span>
-
-                        <span class="description" id="ab38"> <b>Next, make sure your Chromecast device is powered on and ready to cast. </b>
-                            <span class="break"></span>On that same cast menu you were on before, locate your device name and select it. Some Chromecasts may support an "Access Code" that is shown on the screen and you may use it if you like.
-                            <span class="break"></span></span>
-
-                        
-
-        <button class="new" id="troubleshooting">Troubleshooting</button>
-   
-             </div>
-
-                <div id="troubleshooting-page">
-
-                        <span class="description">Troubleshooting</span>
-
-                        <span class="description" id="ab382"> <b>Not connecting?</b>
-                           
-                              <ul>
-                          <li>Is your Chromecast device turned on and ready?</li>
-                          <li>Are you connected to the same Internet/WiFi as the Chromecast you are connecting to?</li>
-                          <li>Is your TV's source on the Chromecast's HDMI source?</li>
-                          <li>Are you finding your Chromecast on a list or using an Access Code? (both should work, we suggest trying both ways)</li>
-                                </ul>
-                        <span class="break"></span>
-                                <b>Try and test different methods. Some may work better than others.</b>
-
-                            <span class="break"></span></span>
-
-        <button class="new" id="done">Close</button>
-   
-             </div>
-
-        </div>
-
-          <script src='https://www.noupe.com/embed/01a083de7f4070008c9e585e751a382c87b1.js'></script>
-
-          <script src="popup.js"></script>
-
-    </body>
-</html>
+home();
