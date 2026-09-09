@@ -4,83 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Pages Chromecast Sender</title>
-    
-    <!-- 1. Style the custom Google Cast element so it is visible -->
     <style>
-        #cast-button {
-            --connected-color: #4285f4;
-            --disconnected-color: #757575;
-            width: 40px;
-            height: 40px;
-            display: inline-block;
-            cursor: pointer;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f7;
         }
-        button.manual-trigger {
-            padding: 10px 20px;
+        #cast-container {
+            text-align: center;
+            padding: 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .cast-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
             font-size: 16px;
+            font-weight: 500;
+            border-radius: 4px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        .cast-btn:hover {
+            background-color: #1557b0;
+        }
+        .cast-btn:disabled {
+            background-color: #c3c3c3;
+            cursor: not-allowed;
+        }
+        #debug-log {
+            margin-top: 20px;
+            width: 320px;
+            max-height: 150px;
+            overflow-y: auto;
+            background: #202124;
+            color: #34a853;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: left;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
 
-    <h1>Chromecast Integration Test</h1>
+<div id="cast-container">
+    <h2>Chromecast Web Sender</h2>
+    <button id="custom-cast-btn" class="cast-btn" disabled>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.92-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+        </svg>
+        <span>Checking Cast Availability...</span>
+    </button>
+    <div id="debug-log">Initial state loaded.</div>
+</div>
 
-    <!-- Option A: The official Google Cast web component button -->
-    <div>
-        <p>Official Cast Component:</p>
-        <button id="cast-button" is="google-cast-button"></button>
-    </div>
+<script>
+    const logger = document.getElementById('debug-log');
+    const castBtn = document.getElementById('custom-cast-btn');
 
-    <!-- Option B: A standard HTML button to trigger the prompt via code -->
-    <div style="margin-top: 20px;">
-        <p>Programmatic Trigger:</p>
-        <button class="manual-trigger" id="custom-trigger-btn">Open Cast Prompt</button>
-    </div>
+    function log(msg) {
+        console.log("[Cast Debug]", msg);
+        logger.textContent += "\n> " + msg;
+        logger.scrollTop = logger.scrollHeight;
+    }
 
-    <script>
-        // 2. This exact global function name MUST be declared before the SDK script loads
-        window.__onGCastApiAvailable = function(isAvailable) {
-            if (isAvailable) {
-                initializeCastApi();
-            } else {
-                console.log("Chromecast API not available on this browser session.");
-            }
-        };
+    window['__onGCastApiAvailable'] = function(isAvailable) {
+        log("__onGCastApiAvailable triggered. Availability: " + isAvailable);
+        if (isAvailable) {
+            initializeCastContext();
+        } else {
+            log("Cast API not available. Ensure you are using Google Chrome or a Chromium browser.");
+        }
+    };
 
-        // 3. Initialize the Cast Context
-        function initializeCastApi() {
-            const castContext = cast.framework.CastContext.getInstance();
-            
-            castContext.setOptions({
-                // Use default media receiver or replace with your custom Registered App ID
+    function initializeCastContext() {
+        try {
+            const context = cast.framework.CastContext.getInstance();
+            context.setOptions({
                 receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
                 autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
+            log("CastContext successfully configured with default media receiver ID.");
 
-            console.log("Cast SDK Initialized Successfully.");
-            setupManualTrigger();
-        }
-
-        // 4. Bind programmatic requestSession to your custom button
-        function setupManualTrigger() {
-            const triggerBtn = document.getElementById('custom-trigger-btn');
-            
-            triggerBtn.addEventListener('click', async () => {
-                try {
-                    const castContext = cast.framework.CastContext.getInstance();
-                    // This command forces Chrome to open the local device casting menu
-                    await castContext.requestSession();
-                    console.log("Session started successfully!");
-                } catch (error) {
-                    console.error("Cast prompt closed or failed:", error);
-                }
+            context.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function(event) {
+                log("Cast State Changed: " + event.castState);
+                updateButtonState(event.castState);
             });
-        }
-    </script>
 
-    <!-- 5. Load the official Google Cast Framework SDK at the end of the body -->
-    <script src="https://gstatic.com"></script>
+            updateButtonState(context.getCastState());
+
+        } catch (error) {
+            log("Initialization Error: " + error.message);
+        }
+    }
+
+    function updateButtonState(state) {
+        const btnText = castBtn.querySelector('span');
+        
+        if (state === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+            log("No Chromecast devices discovered on the local network.");
+            castBtn.disabled = true;
+            btnText.textContent = "No Devices Found";
+        } else if (state === cast.framework.CastState.NOT_CONNECTED) {
+            log("Chromecast devices are ready to connect.");
+            castBtn.disabled = false;
+            btnText.textContent = "Cast to Device";
+        } else if (state === cast.framework.CastState.CONNECTING) {
+            log("Establishing connection with receiver device...");
+            castBtn.disabled = true;
+            btnText.textContent = "Connecting...";
+        } else if (state === cast.framework.CastState.CONNECTED) {
+            log("Successfully connected to Cast session.");
+            castBtn.disabled = false;
+            btnText.textContent = "Disconnect Cast";
+        }
+    }
+
+    castBtn.addEventListener('click', function() {
+        log("Interaction detected. Prompting user selection window.");
+        const context = cast.framework.CastContext.getInstance();
+        
+        if (context.getCastState() === cast.framework.CastState.CONNECTED) {
+            log("Requesting session disconnection.");
+            context.getCurrentSession().endSession(true);
+        } else {
+            context.requestSession()
+                .then(function() {
+                    log("User selected a device. Session initialized.");
+                })
+                .catch(function(err) {
+                    log("Prompt closed or rejected: " + err);
+                });
+        }
+    });
+</script>
+
+<script src="https://gstatic.com"></script>
 
 </body>
 </html>
